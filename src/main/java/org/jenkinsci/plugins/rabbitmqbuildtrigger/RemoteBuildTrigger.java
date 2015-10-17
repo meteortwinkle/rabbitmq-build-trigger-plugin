@@ -14,7 +14,11 @@ import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
@@ -59,11 +63,12 @@ public class RemoteBuildTrigger extends Trigger<AbstractProject<?, ?>> {
     @Override
     public void start(AbstractProject<?, ?> project, boolean newInstance) {
         RemoteBuildListener listener = MessageQueueListener.all().get(RemoteBuildListener.class);
-
+        
         if (listener != null) {
             listener.addTrigger(this);
         }
         super.start(project, newInstance);
+        removeDuplicatedTrigger(listener.getTriggers());
     }
 
     @Override
@@ -72,6 +77,21 @@ public class RemoteBuildTrigger extends Trigger<AbstractProject<?, ?>> {
         super.stop();
     }
 
+    /**
+     * Remove the duplicated trigger from the triggers.
+     *
+     * @param triggers 
+     *          the set of current trigger instances which have already been loaded in the memory 
+     */
+    public void removeDuplicatedTrigger(Set<RemoteBuildTrigger> triggers){
+        Map<String,RemoteBuildTrigger>  tempHashMap= new HashMap<String,RemoteBuildTrigger>(); 
+        for(RemoteBuildTrigger trigger:triggers){
+            tempHashMap.put(trigger.getProjectName(), trigger);
+        }    
+        triggers.clear();
+        triggers.addAll(tempHashMap.values());
+    }
+    
     /**
      * Gets token.
      *
