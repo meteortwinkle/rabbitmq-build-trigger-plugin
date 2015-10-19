@@ -63,7 +63,7 @@ public class RemoteBuildTrigger extends Trigger<AbstractProject<?, ?>> {
     @Override
     public void start(AbstractProject<?, ?> project, boolean newInstance) {
         RemoteBuildListener listener = MessageQueueListener.all().get(RemoteBuildListener.class);
-        
+
         if (listener != null) {
             listener.addTrigger(this);
         }
